@@ -110,145 +110,169 @@ public class Model extends Observable {
         boolean changed;
         changed = false;
 
-        // TODO: Modify this.board (and perhaps this.score) to account
-        // for the tilt to the Side SIDE. If the board changed, set the
-        // changed local variable to true.
-        int size = this.board.size();
         if (side == Side.NORTH) {
-            for (int j = 0; j < size; j += 1) {
-                int index = size - 1;
-                Tile first = null;
-                for (int i = index; i >= 0; i -= 1) {
-                    if (this.board.tile(j, i) == null) {
-                        continue;
-                    }
-                    if (first == null) {
-                        first = this.board.tile(j, i);
-                        this.board.move(j, index, first);
-                        if (i != index) {
-                            changed = true;
-                        }
-                        continue;
-                    }
-                    if (first.value() == this.board.tile(j, i).value()) {
-                        this.board.move(j, index, this.board.tile(j, i));
-                        this.score += first.value() * 2;
-                        changed = true;
-                        first = null;
-                        index -= 1;
-                    } else {
-                        index -= 1;
-                        this.board.move(j, index, this.board.tile(j, i));
-                        first = this.board.tile(j, index);
-                        if (i != index) {
-                            changed = true;
-                        }
-                    }
-                }
-            }
+            changed = moveUp();
         }
         if (side == Side.SOUTH) {
-            for (int j = 0; j < size; j += 1) {
-                int index = 0;
-                Tile first = null;
-                for (int i = 0; i < size; i += 1) {
-                    if (this.board.tile(j, i) == null) {
-                        continue;
-                    }
-                    if (first == null) {
-                        first = this.board.tile(j, i);
-                        this.board.move(j, index, first);
-                        if (i != index) {
-                            changed = true;
-                        }
-                        continue;
-                    }
-                    if (first.value() == this.board.tile(j, i).value()) {
-                        this.board.move(j, index, this.board.tile(j, i));
-                        this.score += first.value() * 2;
-                        changed = true;
-                        first = null;
-                        index += 1;
-                    } else {
-                        index += 1;
-                        this.board.move(j, index, this.board.tile(j, i));
-                        first = this.board.tile(j, index);
-                        if (i != index) {
-                            changed = true;
-                        }
-                    }
-                }
-            }
+            changed = moveDown();
         }
         if (side == Side.EAST) {
-            for (int i = 0; i < size; i += 1) {
-                int index = size - 1;
-                Tile first = null;
-                for (int j = index; j >= 0; j -= 1) {
-                    if (this.board.tile(j, i) == null) {
-                        continue;
-                    }
-                    if (first == null) {
-                        first = this.board.tile(j, i);
-                        this.board.move(index, i, first);
-                        if (j != index) {
-                            changed = true;
-                        }
-                        continue;
-                    }
-                    if (first.value() == this.board.tile(j, i).value()) {
-                        this.board.move(index, i, this.board.tile(j, i));
-                        this.score += first.value() * 2;
-                        changed = true;
-                        first = null;
-                        index -= 1;
-                    } else {
-                        index -= 1;
-                        this.board.move(index, i, this.board.tile(j, i));
-                        first = this.board.tile(index, i);
-                        if (j != index) {
-                            changed = true;
-                        }
-                    }
-                }
-            }
+            changed = moveRight();
         }
         if (side == Side.WEST) {
-            for (int i = 0; i < size; i += 1) {
-                int index = 0;
-                Tile first = null;
-                for (int j = index; j < size; j += 1) {
-                    if (this.board.tile(j, i) == null) {
-                        continue;
-                    }
-                    if (first == null) {
-                        first = this.board.tile(j, i);
-                        this.board.move(index, i, first);
-                        if (j != index) {
-                            changed = true;
-                        }
-                        continue;
-                    }
-                    if (first.value() == this.board.tile(j, i).value()) {
-                        this.board.move(index, i, this.board.tile(j, i));
-                        this.score += first.value() * 2;
-                        changed = true;
-                        first = null;
-                        index += 1;
-                    } else {
-                        index += 1;
-                        this.board.move(index, i, this.board.tile(j, i));
-                        first = this.board.tile(index, i);
-                        if (j != index) {
-                            changed = true;
-                        }
-                    }
-                }
-            }
+            changed = moveLeft();
         }
         checkGameOver();
         if (changed) {
             setChanged();
+        }
+        return changed;
+    }
+
+    private boolean moveUp() {
+        boolean changed = false;
+        int size = this.board.size();
+        for (int j = 0; j < size; j += 1) {
+            int index = size - 1;
+            Tile first = null;
+            for (int i = index; i >= 0; i -= 1) {
+                if (this.board.tile(j, i) == null) {
+                    continue;
+                }
+                if (first == null) {
+                    first = this.board.tile(j, i);
+                    this.board.move(j, index, first);
+                    if (i != index) {
+                        changed = true;
+                    }
+                    continue;
+                }
+                if (first.value() == this.board.tile(j, i).value()) {
+                    this.board.move(j, index, this.board.tile(j, i));
+                    this.score += first.value() * 2;
+                    changed = true;
+                    first = null;
+                    index -= 1;
+                } else {
+                    index -= 1;
+                    this.board.move(j, index, this.board.tile(j, i));
+                    first = this.board.tile(j, index);
+                    if (i != index) {
+                        changed = true;
+                    }
+                }
+            }
+        }
+        return changed;
+    }
+
+    private boolean moveDown() {
+        boolean changed = false;
+        int size = this.board.size();
+        for (int j = 0; j < size; j += 1) {
+            int index = 0;
+            Tile first = null;
+            for (int i = 0; i < size; i += 1) {
+                if (this.board.tile(j, i) == null) {
+                    continue;
+                }
+                if (first == null) {
+                    first = this.board.tile(j, i);
+                    this.board.move(j, index, first);
+                    if (i != index) {
+                        changed = true;
+                    }
+                    continue;
+                }
+                if (first.value() == this.board.tile(j, i).value()) {
+                    this.board.move(j, index, this.board.tile(j, i));
+                    this.score += first.value() * 2;
+                    changed = true;
+                    first = null;
+                    index += 1;
+                } else {
+                    index += 1;
+                    this.board.move(j, index, this.board.tile(j, i));
+                    first = this.board.tile(j, index);
+                    if (i != index) {
+                        changed = true;
+                    }
+                }
+            }
+        }
+        return changed;
+    }
+
+    private boolean moveRight() {
+        boolean changed = false;
+        int size = this.board.size();
+        for (int i = 0; i < size; i += 1) {
+            int index = size - 1;
+            Tile first = null;
+            for (int j = index; j >= 0; j -= 1) {
+                if (this.board.tile(j, i) == null) {
+                    continue;
+                }
+                if (first == null) {
+                    first = this.board.tile(j, i);
+                    this.board.move(index, i, first);
+                    if (j != index) {
+                        changed = true;
+                    }
+                    continue;
+                }
+                if (first.value() == this.board.tile(j, i).value()) {
+                    this.board.move(index, i, this.board.tile(j, i));
+                    this.score += first.value() * 2;
+                    changed = true;
+                    first = null;
+                    index -= 1;
+                } else {
+                    index -= 1;
+                    this.board.move(index, i, this.board.tile(j, i));
+                    first = this.board.tile(index, i);
+                    if (j != index) {
+                        changed = true;
+                    }
+                }
+            }
+        }
+        return changed;
+    }
+
+    private boolean moveLeft() {
+        boolean changed = false;
+        int size = this.board.size();
+        for (int i = 0; i < size; i += 1) {
+            int index = 0;
+            Tile first = null;
+            for (int j = index; j < size; j += 1) {
+                if (this.board.tile(j, i) == null) {
+                    continue;
+                }
+                if (first == null) {
+                    first = this.board.tile(j, i);
+                    this.board.move(index, i, first);
+                    if (j != index) {
+                        changed = true;
+                    }
+                    continue;
+                }
+                if (first.value() == this.board.tile(j, i).value()) {
+                    this.board.move(index, i, this.board.tile(j, i));
+                    this.score += first.value() * 2;
+                    changed = true;
+                    first = null;
+                    index += 1;
+                } else {
+                    index += 1;
+                    this.board.move(index, i, this.board.tile(j, i));
+                    first = this.board.tile(index, i);
+                    if (j != index) {
+                        changed = true;
+                    }
+                }
+            }
         }
         return changed;
     }
