@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author Li
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -113,7 +113,139 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
-
+        int size = this.board.size();
+        if (side == Side.NORTH) {
+            for (int j = 0; j < size; j += 1) {
+                int index = size - 1;
+                Tile first = null;
+                for (int i = index; i >= 0; i -= 1) {
+                    if (this.board.tile(j, i) == null) {
+                        continue;
+                    }
+                    if (first == null) {
+                        first = this.board.tile(j, i);
+                        this.board.move(j, index, first);
+                        if (i != index) {
+                            changed = true;
+                        }
+                        continue;
+                    }
+                    if (first.value() == this.board.tile(j, i).value()) {
+                        this.board.move(j, index, this.board.tile(j, i));
+                        this.score += first.value() * 2;
+                        changed = true;
+                        first = null;
+                        index -= 1;
+                    } else {
+                        index -= 1;
+                        this.board.move(j, index, this.board.tile(j, i));
+                        first = this.board.tile(j, index);
+                        if (i != index) {
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (side == Side.SOUTH) {
+            for (int j = 0; j < size; j += 1) {
+                int index = 0;
+                Tile first = null;
+                for (int i = 0; i < size; i += 1) {
+                    if (this.board.tile(j, i) == null) {
+                        continue;
+                    }
+                    if (first == null) {
+                        first = this.board.tile(j, i);
+                        this.board.move(j, index, first);
+                        if (i != index) {
+                            changed = true;
+                        }
+                        continue;
+                    }
+                    if (first.value() == this.board.tile(j, i).value()) {
+                        this.board.move(j, index, this.board.tile(j, i));
+                        this.score += first.value() * 2;
+                        changed = true;
+                        first = null;
+                        index += 1;
+                    } else {
+                        index += 1;
+                        this.board.move(j, index, this.board.tile(j, i));
+                        first = this.board.tile(j, index);
+                        if (i != index) {
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (side == Side.EAST) {
+            for (int i = 0; i < size; i += 1) {
+                int index = size - 1;
+                Tile first = null;
+                for (int j = index; j >= 0; j -= 1) {
+                    if (this.board.tile(j, i) == null) {
+                        continue;
+                    }
+                    if (first == null) {
+                        first = this.board.tile(j, i);
+                        this.board.move(index, i, first);
+                        if (j != index) {
+                            changed = true;
+                        }
+                        continue;
+                    }
+                    if (first.value() == this.board.tile(j, i).value()) {
+                        this.board.move(index, i, this.board.tile(j, i));
+                        this.score += first.value() * 2;
+                        changed = true;
+                        first = null;
+                        index -= 1;
+                    } else {
+                        index -= 1;
+                        this.board.move(index, i, this.board.tile(j, i));
+                        first = this.board.tile(index, i);
+                        if (j != index) {
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (side == Side.WEST) {
+            for (int i = 0; i < size; i += 1) {
+                int index = 0;
+                Tile first = null;
+                for (int j = index; j < size; j += 1) {
+                    if (this.board.tile(j, i) == null) {
+                        continue;
+                    }
+                    if (first == null) {
+                        first = this.board.tile(j, i);
+                        this.board.move(index, i, first);
+                        if (j != index) {
+                            changed = true;
+                        }
+                        continue;
+                    }
+                    if (first.value() == this.board.tile(j, i).value()) {
+                        this.board.move(index, i, this.board.tile(j, i));
+                        this.score += first.value() * 2;
+                        changed = true;
+                        first = null;
+                        index += 1;
+                    } else {
+                        index += 1;
+                        this.board.move(index, i, this.board.tile(j, i));
+                        first = this.board.tile(index, i);
+                        if (j != index) {
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        }
         checkGameOver();
         if (changed) {
             setChanged();
@@ -137,7 +269,14 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        int size = b.size();
+        for (int i = 0; i < size; i += 1) {
+            for (int j = 0; j < size; j += 1) {
+                if (b.tile(i, j) == null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -147,7 +286,14 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        int size = b.size();
+        for (int i = 0; i < size; i += 1) {
+            for (int j = 0; j < size; j += 1) {
+                if (b.tile(i, j) != null && b.tile(i, j).value() == MAX_PIECE) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -158,13 +304,26 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
-        return false;
+        if (emptySpaceExists(b)) {
+            return true;
+        }
+        int size = b.size() - 1;
+        for (int i = 0; i < size; i += 1) {
+            for (int j = 0; j < size; j += 1) {
+                if (b.tile(i, j).value() == b.tile(i + 1, j).value()
+                        || b.tile(i, j).value() == b.tile(i, j + 1).value()) {
+                    return true;
+                }
+            }
+        }
+        int i = size - 1;
+        return b.tile(i, size).value() == b.tile(i + 1, size).value()
+                || b.tile(size, i).value() == b.tile(size, i + 1).value();
     }
 
 
     @Override
-     /** Returns the model as a string, used for debugging. */
+    /** Returns the model as a string, used for debugging. */
     public String toString() {
         Formatter out = new Formatter();
         out.format("%n[%n");
