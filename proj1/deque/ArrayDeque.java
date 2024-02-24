@@ -88,7 +88,10 @@ public class ArrayDeque<T> implements Deque<T> {
     }
 
     public T get(int index) {
-        return array[(first + 1) % array.length];
+        if (index > size) {
+            return null;
+        }
+        return array[(first + 1 + index) % array.length];
     }
 
     private void resize(int length) {
