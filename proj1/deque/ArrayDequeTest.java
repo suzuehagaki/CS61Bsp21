@@ -54,6 +54,19 @@ public class ArrayDequeTest {
     }
 
     @Test
+    public void getTest() {
+        ArrayDeque<Integer> arrayDeque = new ArrayDeque<>();
+
+        for (int i = 0; i < 3; i += 1) {
+            arrayDeque.addLast(i);
+        }
+
+        for (int i = 0; i < 3; i += 1) {
+            assertEquals("Should have the same value", i, arrayDeque.removeFirst(), 0);
+        }
+    }
+
+    @Test
     public void bigADequeTest() {
 
         ArrayDeque<Integer> arrayDeque = new ArrayDeque<>();
