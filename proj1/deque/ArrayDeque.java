@@ -4,16 +4,16 @@ import java.util.Iterator;
 
 public class ArrayDeque<T> implements Deque<T> {
 
-    T[] array;
-    int size;
+    private T[] array;
+    private int size;
     /** position of item which will be inserted to head of array */
-    int first;
+    private int first;
     /** position of item which will be inserted to tail of array */
-    int last;
-    double usage;
-    static final double USAGE_LOWER_BOUND = 0.25;
-    static final double USAGE_UPPER_BOUND = 0.75;
-    static final int LENGTH_LOWER_BOUND = 16;
+    private int last;
+    private double usage;
+    private static final double USAGE_LOWER_BOUND = 0.25;
+    private static final double USAGE_UPPER_BOUND = 0.75;
+    private static final int LENGTH_LOWER_BOUND = 16;
 
     public ArrayDeque() {
         array = (T[]) new Object[8];
@@ -112,7 +112,7 @@ public class ArrayDeque<T> implements Deque<T> {
     private class ArrayDequeIterator implements Iterator<T> {
         private int wizPos;
 
-        public ArrayDequeIterator() {
+        ArrayDequeIterator() {
             wizPos = 0;
         }
 
@@ -126,6 +126,32 @@ public class ArrayDeque<T> implements Deque<T> {
             wizPos += 1;
             return returnItem;
         }
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof Deque)) {
+            return false;
+        }
+        Deque<T> o = (Deque<T>) other;
+        if (this.size() != o.size()) {
+            return false;
+        }
+        if (this.get(0).getClass() != o.get(0).getClass()) {
+            return false;
+        }
+        for (int i = 0; i < this.size(); i += 1) {
+            if (this.get(i) != o.get(i)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

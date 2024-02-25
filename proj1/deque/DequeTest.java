@@ -4,6 +4,7 @@ import edu.princeton.cs.algs4.StdRandom;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DequeTest {
     @Test
@@ -30,10 +31,24 @@ public class DequeTest {
                 }
             } else if (operationNumber == 3) {
                 if (!A.isEmpty()) {
-                    int randomIndex = StdRandom.uniform(0, A.size);
+                    int randomIndex = StdRandom.uniform(0, A.size());
                     assertEquals(A.get(randomIndex), L.get(randomIndex));
                 }
             }
         }
+    }
+
+    @Test
+    public void equalsTest() {
+        ArrayDeque<Integer> A = new ArrayDeque<>();
+        LinkedListDeque<Integer> L = new LinkedListDeque<>();
+        for (int i = 0; i < 10; i += 1) {
+            A.addLast(i);
+            L.addLast(i);
+            assertTrue(A.equals(L));
+            assertTrue(L.equals(A));
+        }
+        assertTrue(A.equals(A));
+        assertTrue(L.equals(L));
     }
 }

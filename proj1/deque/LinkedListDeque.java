@@ -89,6 +89,20 @@ public class LinkedListDeque<T> implements Deque<T> {
         return node.item;
     }
 
+    public T getRecursive(int index) {
+        if (index > size) {
+            return null;
+        }
+        return getRecursiveHelper(index, sentinel.next);
+    }
+
+    private T getRecursiveHelper(int index, Node<T> node) {
+        if (index == 0) {
+            return node.item;
+        }
+        return getRecursiveHelper(index - 1, node.next);
+    }
+
     public Iterator<T> iterator() {
         return new LinkedListDequeIterator();
     }
@@ -96,7 +110,7 @@ public class LinkedListDeque<T> implements Deque<T> {
     private class LinkedListDequeIterator implements Iterator<T> {
         private Node<T> node;
 
-        public LinkedListDequeIterator() {
+        LinkedListDequeIterator() {
             node = sentinel.next;
         }
 
@@ -110,4 +124,31 @@ public class LinkedListDeque<T> implements Deque<T> {
             return returnItem;
         }
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof Deque)) {
+            return false;
+        }
+        Deque<T> o = (Deque<T>) other;
+        if (this.size() != o.size()) {
+            return false;
+        }
+        if (this.get(0).getClass() != o.get(0).getClass()) {
+            return false;
+        }
+        for (int i = 0; i < this.size(); i += 1) {
+            if (this.get(i) != o.get(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
