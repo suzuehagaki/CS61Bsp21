@@ -2,7 +2,7 @@ package deque;
 
 import java.util.Iterator;
 
-public class ArrayDeque<T> implements Deque<T> {
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     private T[] array;
     private int size;
@@ -143,11 +143,8 @@ public class ArrayDeque<T> implements Deque<T> {
         if (this.size() != o.size()) {
             return false;
         }
-        if (this.get(0).getClass() != o.get(0).getClass()) {
-            return false;
-        }
         for (int i = 0; i < this.size(); i += 1) {
-            if (this.get(i) != o.get(i)) {
+            if (!this.get(i).equals(o.get(i))) {
                 return false;
             }
         }
