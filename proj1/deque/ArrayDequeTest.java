@@ -48,8 +48,8 @@ public class ArrayDequeTest {
 
         boolean passed1 = false;
         boolean passed2 = false;
-        assertEquals("Should return null when removeFirst is called on an empty Deque,", null, arrayDeque.removeFirst());
-        assertEquals("Should return null when removeLast is called on an empty Deque,", null, arrayDeque.removeLast());
+        assertEquals(null, arrayDeque.removeFirst());
+        assertEquals(null, arrayDeque.removeLast());
 
     }
 
