@@ -14,10 +14,10 @@ public class MaxArrayDequeTest {
                 return o1 - o2;
             }
         };
-        MaxArrayDeque<Integer> AD = new MaxArrayDeque<>(comparator);
+        MaxArrayDeque<Integer> A = new MaxArrayDeque<>(comparator);
         for (int i = 0; i < 10; i += 1) {
-            AD.addLast(i);
-            assertEquals(i, AD.max(), 0);
+            A.addLast(i);
+            assertEquals(i, A.max(), 0);
         }
 
         /* one way to get minItem */
@@ -28,8 +28,8 @@ public class MaxArrayDequeTest {
         };
 
         for (int i = 0; i < 10; i += 1) {
-            assertEquals(i, AD.max(comparator1), 0);
-            AD.removeFirst();
+            assertEquals(i, A.max(comparator1), 0);
+            A.removeFirst();
         }
     }
 
@@ -40,23 +40,23 @@ public class MaxArrayDequeTest {
                 return o1.compareTo(o2);
             }
         };
-        MaxArrayDeque<String> AD = new MaxArrayDeque<>(comparator);
-        String[] strings = {"a", "b" , "c", "d", "e", "f", "g", "h", "i", "j"};
+        MaxArrayDeque<String> A = new MaxArrayDeque<>(comparator);
+        String[] strings = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
         for (int i = 0; i < 10; i += 1) {
-            AD.addLast(strings[i]);
-            assertEquals(strings[i], AD.max());
+            A.addLast(strings[i]);
+            assertEquals(strings[i], A.max());
         }
 
         /* one way to get minItem */
-        Comparator<String> comparator1= new Comparator<String>() {
+        Comparator<String> comparator1 = new Comparator<String>() {
             public int compare(String o1, String o2) {
                 return o2.compareTo(o1);
             }
         };
 
         for (int i = 0; i < 10; i += 1) {
-            assertEquals(strings[i], AD.max(comparator1));
-            AD.removeFirst();
+            assertEquals(strings[i], A.max(comparator1));
+            A.removeFirst();
         }
     }
 
