@@ -32,14 +32,14 @@ public class TestArrayDequeEC {
                 operationSequence.append("addFirst(" + randVal + ")\n");
             } else if (operationNumber == 2) {
                 // size
-                operationSequence.append("size(): " + AD.size() + "\n");
+                operationSequence.append("size()\n");
                 assertEquals(operationSequence.toString(), ADS.size(), AD.size());
             } else if (operationNumber == 3) {
                 // removeLast
                 if (!AD.isEmpty()) {
                     Integer a = AD.removeLast();
                     Integer b = ADS.removeLast();
-                    operationSequence.append("removeLast(): " + a + "\n");
+                    operationSequence.append("removeLast()\n");
                     assertEquals(operationSequence.toString(), b, a);
                 }
             } else if (operationNumber == 4) {
@@ -47,7 +47,7 @@ public class TestArrayDequeEC {
                 if (!AD.isEmpty()) {
                     Integer a = AD.removeFirst();
                     Integer b = ADS.removeFirst();
-                    operationSequence.append("removeFirst(): " + a + "\n");
+                    operationSequence.append("removeFirst()\n");
                     assertEquals(operationSequence.toString(), b, a);
                 }
             }
