@@ -32,6 +32,7 @@ public class TestArrayDequeEC {
                 operationSequence.append("addFirst(" + randVal + ")\n");
             } else if (operationNumber == 2) {
                 // size
+                operationSequence.append("size(): " + AD.size() + "\n");
                 assertEquals(operationSequence.toString(), ADS.size(), AD.size());
             } else if (operationNumber == 3) {
                 // removeLast
