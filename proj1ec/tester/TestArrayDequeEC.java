@@ -23,13 +23,13 @@ public class TestArrayDequeEC {
                 int randVal = StdRandom.uniform(0, 100);
                 AD.addLast(randVal);
                 ADS.addLast(randVal);
-                operationSequence.append("addLast(" + randVal + ")\n");
+                operationSequence.append("addLast(").append(randVal).append(")\n");
             } else if (operationNumber == 1) {
                 // addFirst
                 int randVal = StdRandom.uniform(0, 100);
                 AD.addFirst(randVal);
                 ADS.addFirst(randVal);
-                operationSequence.append("addFirst(" + randVal + ")\n");
+                operationSequence.append("addFirst(").append(randVal).append(")\n");
             } else if (operationNumber == 2) {
                 // size
                 operationSequence.append("size()\n");
