@@ -151,6 +151,7 @@ public class ArrayDeque<T> implements Deque<T> {
         return true;
     }
 
+    @Override
     public int hashCode() {
         int hashCode = 1;
         for (Object o : this) {
