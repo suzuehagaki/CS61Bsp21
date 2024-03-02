@@ -65,4 +65,29 @@ public class DequeTest {
         boolean b = A3.equals(L3);
         assertTrue(b);
     }
+
+    @Test
+    public void hashTest() {
+        ArrayDeque<Integer> A = new ArrayDeque<>();
+        ArrayDeque<Integer> A2 = new ArrayDeque<>();
+        LinkedListDeque<Integer> L = new LinkedListDeque<>();
+        LinkedListDeque<Integer> L2 = new LinkedListDeque<>();
+        for (int i = 0; i < 10; i += 1) {
+            A.addLast(i);
+            L.addLast(i);
+            A2.addLast(i);
+            L2.addLast(i);
+            assertEquals(A.hashCode(), L.hashCode());
+        }
+        assertEquals(A.hashCode(), A2.hashCode());
+        assertEquals(L.hashCode(), L2.hashCode());
+        ArrayDeque<ArrayDeque<Integer>> A3 = new ArrayDeque<>();
+        LinkedListDeque<LinkedListDeque<Integer>> L3 = new LinkedListDeque<>();
+        A3.addLast(A);
+        L3.addLast(L);
+        A3.addLast(A2);
+        L3.addLast(L2);
+        assertEquals(A3.hashCode(), L3.hashCode());
+    }
+
 }

@@ -151,4 +151,13 @@ public class ArrayDeque<T> implements Deque<T> {
         return true;
     }
 
+    public int hashCode() {
+        int hashCode = 1;
+        for (Object o : this) {
+            hashCode = hashCode * 31;
+            hashCode = hashCode + o.hashCode();
+        }
+        return hashCode;
+    }
+
 }

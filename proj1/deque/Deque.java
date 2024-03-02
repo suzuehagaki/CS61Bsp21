@@ -33,6 +33,13 @@ public interface Deque<T> extends Iterable<T> {
      * If no such item exists, returns null. Must not alter the deque! */
     T get(int index);
 
+    /** Gets a iterator of deque. */
+    @Override
     Iterator<T> iterator();
+
+
+    /** Must override both hashCode and iterator. */
+    @Override
+    int hashCode();
 
 }
