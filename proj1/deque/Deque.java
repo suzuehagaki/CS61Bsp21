@@ -37,8 +37,11 @@ public interface Deque<T> extends Iterable<T> {
     @Override
     Iterator<T> iterator();
 
+    /** return true if items in other is completely equals to this. */
+    @Override
+    boolean equals(Object other);
 
-    /** Must override both hashCode and iterator. */
+    /** Must override both hashCode and equals. */
     @Override
     int hashCode();
 

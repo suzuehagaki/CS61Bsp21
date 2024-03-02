@@ -114,10 +114,12 @@ public class LinkedListDeque<T> implements Deque<T> {
             wizPos = 0;
         }
 
+        @Override
         public boolean hasNext() {
             return wizPos < size;
         }
 
+        @Override
         public T next() {
             T returnItem = get(wizPos);
             wizPos += 1;
