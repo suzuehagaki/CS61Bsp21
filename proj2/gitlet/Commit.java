@@ -8,7 +8,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static gitlet.Utils.sha1;
+import static gitlet.Utils.*;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -55,6 +55,19 @@ public class Commit implements Serializable {
 
     public void addFile(File file, Blob blob) {
         this.map.put(file.getPath(), blob.getSHA1());
+    }
+
+    public void removeFile(File file) {
+        this.map.remove(file.getPath());
+    }
+
+    public void clearFiles() {
+        for (String s : this.map.keySet()) {
+            File file = new File(s);
+            if (file.exists()) {
+                file.delete();
+            }
+        }
     }
 
     public String generateSHA1() {

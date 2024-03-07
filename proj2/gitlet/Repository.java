@@ -98,40 +98,28 @@ public class Repository {
 
         File head = readObject(HEAD, File.class);
         Commit commit = readObject(head, Commit.class);
-        File branch = MASTER;
-        if (!head.equals(MASTER)) {
-            branch = join(BRANCHES, "newBranch");
-            head = branch;
-            if (!branch.exists()) {
-                try {
-                    branch.createNewFile();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
         Commit newCommit = new Commit(commit, message);
 
         for (File file : Objects.requireNonNull(ADD_AREA.listFiles())) {
             Blob blob = readObject(file, Blob.class);
             String formerBlob =  newCommit.getMap().get(blob.getFullFilePath().getPath());
             if (formerBlob == null) {
-                newCommit.getMap().put(blob.getFullFilePath().getPath(), blob.getSHA1());
+                newCommit.addFile(blob.getFullFilePath(), blob);
             } else if (!formerBlob.equals(blob.getSHA1())) {
-                newCommit.getMap().remove(blob.getFullFilePath().getPath());
-                newCommit.getMap().put(blob.getFullFilePath().getPath(), blob.getSHA1());
+                newCommit.removeFile(blob.getFullFilePath());
+                newCommit.addFile(blob.getFullFilePath(), blob);
             }
             writeObject(join(BLOBS, blob.getSHA1()), blob);
-            file.delete();
         }
         for (File file : Objects.requireNonNull(REMOVE_AREA.listFiles())) {
             Blob blob = readObject(file, Blob.class);
-            newCommit.getMap().remove(blob.getFullFilePath().getPath());
-            file.delete();
+            newCommit.addFile(blob.getFullFilePath(), blob);
         }
 
+        cleanStagingArea();
+
         writeObject(HEAD, head);
-        writeObject(branch, newCommit);
+        writeObject(head, newCommit);
         writeObject(join(SHA1COMMITS, newCommit.generateSHA1()), newCommit);
 
     }
@@ -268,16 +256,65 @@ public class Repository {
         Commit headCommit = readObject(head, Commit.class);
         Commit commit = readObject(branch, Commit.class);
         for (File file : Objects.requireNonNull(CWD.listFiles())) {
-            if (!commit.containFile(file.getPath())) {
+            if (!headCommit.containFile(file.getPath())) {
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                return;
             }
         }
+        headCommit.clearFiles();
         for (String s : commit.getFiles()) {
             File temp = join(BLOBS, commit.getSHA1(s));
             Blob blob = readObject(temp, Blob.class);
             blob.writeBlob();
         }
         cleanStagingArea();
+
+    }
+
+    public static void branch(String branchName) {
+        File branch = join(BRANCHES, branchName);
+        if (branch.exists()) {
+            System.out.println("A branch with that name already exists.");
+            return;
+        }
+        File head = readObject(HEAD, File.class);
+        Commit commit = readObject(head, Commit.class);
+        writeObject(branch, commit);
+    }
+
+    public static void removeBranch(String branchName) {
+        File branch = join(BRANCHES, branchName);
+        if (!branch.exists()) {
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+        File head = readObject(HEAD, File.class);
+        if (head.equals(branch)) {
+            System.out.println("Cannot remove the current branch.");
+            return;
+        }
+        branch.delete();
+    }
+
+    public static void reset(String sha1) {
+        File file = readObject(join(SHA1COMMITS, sha1), File.class);
+        if (!file.exists()) {
+            System.out.println("No commit with that id exists.");
+        }
+        File head = readObject(HEAD, File.class);
+        writeObject(head, file);
+        writeObject(HEAD, file);
+        checkout(head.getName());
+    }
+
+    public static void merge(String branchName) {
+        File head = readObject(HEAD, File.class);
+        File branch = readObject(join(BRANCHES, branchName), File.class);
+        if (head.equals(branch)) {
+            checkout(branchName);
+            System.out.println("Current branch fast-forwarded.");
+            return;
+        }
 
     }
 

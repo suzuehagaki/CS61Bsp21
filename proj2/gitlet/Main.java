@@ -63,6 +63,18 @@ public class Main {
                     Repository.checkoutFile(args[1], args[3]);
                 }
                 break;
+            case "branch":
+                Repository.branch(args[1]);
+                break;
+            case "rm-branch":
+                Repository.removeBranch(args[1]);
+                break;
+            case "reset":
+                Repository.reset(args[1]);
+                break;
+            case "merge":
+                Repository.merge(args[1]);
+                break;
             default:
                 System.out.println("No command with that name exists.");
         }
