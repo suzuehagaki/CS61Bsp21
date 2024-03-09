@@ -86,8 +86,16 @@ public class Repository {
             }
             return;
         }
+        File removedFile = join(REMOVE_AREA, fileName);
+        if (removedFile.exists()) {
+            Blob temp = readObject(removedFile, Blob.class);
+            if (sha1.equals(temp.getSHA1())) {
+                removedFile.delete();
+                return;
+            }
+        }
         Blob b = new Blob(file, sha1, content);
-        writeObject(join(ADD_AREA,  fileName), b);
+        writeObject(join(ADD_AREA,  file.getName()), b);
     }
 
     public static void commit(String message) {
@@ -95,6 +103,11 @@ public class Repository {
         if (Objects.requireNonNull(ADD_AREA.listFiles()).length == 0
                 && Objects.requireNonNull(REMOVE_AREA.listFiles()).length == 0) {
             System.out.println("No changes added to the commit.");
+            return;
+        }
+
+        if (message.isEmpty()) {
+            System.out.println("Please enter a commit message.");
             return;
         }
 
@@ -139,9 +152,9 @@ public class Repository {
             File file = join(BLOBS, commit.getSHA1(fileInCwd.getPath()));
             Blob blob = readObject(file, Blob.class);
             writeObject(join(REMOVE_AREA, fileName), blob);
+            fileInCwd.delete();
         }
         fileInAddArea.delete();
-        fileInCwd.delete();
     }
 
     public static void log() {
@@ -260,20 +273,8 @@ public class Repository {
             System.out.println("No need to checkout the current branch.");
             return;
         }
-        Commit headCommit = readObject(head, Commit.class);
-        Commit commit = readObject(branch, Commit.class);
-        for (File file : Objects.requireNonNull(CWD.listFiles())) {
-            if (!headCommit.containFile(file.getPath())) {
-                System.out.println("There is an untracked file in the way; "
-                        + "delete it, or add and commit it first.");
-                return;
-            }
-        }
-        headCommit.clearFiles();
-        for (String s : commit.getFiles()) {
-            File temp = join(BLOBS, commit.getSHA1(s));
-            Blob blob = readObject(temp, Blob.class);
-            blob.writeBlob();
+        if (!checkoutHelper(head, branch)) {
+            return;
         }
         writeObject(HEAD, branch);
         cleanStagingArea();
@@ -306,14 +307,17 @@ public class Repository {
     }
 
     public static void reset(String sha1) {
-        File file = readObject(join(SHA1COMMITS, sha1), File.class);
+        File file = join(SHA1COMMITS, sha1);
         if (!file.exists()) {
             System.out.println("No commit with that id exists.");
         }
         File head = readObject(HEAD, File.class);
-        writeObject(head, file);
-        writeObject(HEAD, file);
-        checkout(head.getName());
+        if (!checkoutHelper(head, file)) {
+            return;
+        }
+        Commit commit = readObject(file, Commit.class);
+        writeObject(head, commit);
+        writeObject(HEAD, head);
     }
 
     public static void merge(String branchName) {
@@ -475,6 +479,39 @@ public class Repository {
             branch2 = readObject(join(SHA1COMMITS, branch2.getFirstParent()), Commit.class);
         }
         return branch1.getFirstParent();
+    }
+
+    private static boolean hasUntracked(Commit commit, File prePath) {
+        for (File file : Objects.requireNonNull(prePath.listFiles())) {
+            if (file.getName().charAt(0) == '.' || file.getName().equals("gitlet")) {
+                continue;
+            }
+            if (file.isDirectory()) {
+                if (hasUntracked(commit, file)) {
+                    return true;
+                }
+            } else if (!commit.containFile(file.getPath())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean checkoutHelper(File head, File branch) {
+        Commit headCommit = readObject(head, Commit.class);
+        Commit commit = readObject(branch, Commit.class);
+        if (hasUntracked(headCommit, CWD)) {
+            System.out.println("There is an untracked file in the way; "
+                    + "delete it, or add and commit it first.");
+            return false;
+        }
+        headCommit.clearFiles();
+        for (String s : commit.getFiles()) {
+            File temp = join(BLOBS, commit.getSHA1(s));
+            Blob blob = readObject(temp, Blob.class);
+            blob.writeBlob();
+        }
+        return true;
     }
 
 }
