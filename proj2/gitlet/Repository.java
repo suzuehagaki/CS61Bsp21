@@ -45,7 +45,8 @@ public class Repository {
     /** init .gitlet directory if it does not exist. */
     public static void init() {
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            System.out.println("A Gitlet version-control system "
+                    + "already exists in the current directory.");
             return;
         }
         GITLET_DIR.mkdir();
@@ -78,7 +79,8 @@ public class Repository {
         String sha1 = sha1((Object) content);
         File head = readObject(HEAD, File.class);
         Commit commit = readObject(head, Commit.class);
-        if (commit.getMap().containsKey(file.getPath()) && commit.getMap().get(file.getPath()).equals(sha1)) {
+        if (commit.getMap().containsKey(file.getPath())
+                && commit.getMap().get(file.getPath()).equals(sha1)) {
             if (join(ADD_AREA, fileName).exists()) {
                 join(ADD_AREA, fileName).delete();
             }
@@ -113,7 +115,7 @@ public class Repository {
         }
         for (File file : Objects.requireNonNull(REMOVE_AREA.listFiles())) {
             Blob blob = readObject(file, Blob.class);
-            newCommit.addFile(blob.getFullFilePath(), blob);
+            newCommit.removeFile(blob.getFullFilePath());
         }
 
         cleanStagingArea();
@@ -127,22 +129,19 @@ public class Repository {
     public static void remove(String fileName) {
         File head = readObject(HEAD, File.class);
         Commit commit = readObject(head, Commit.class);
-        File file = join(ADD_AREA, fileName);
-        if (!file.exists()) {
+        File fileInAddArea = join(ADD_AREA, fileName);
+        File fileInCwd = join(CWD, fileName);
+        if (!fileInAddArea.exists() && !commit.containFile(fileInCwd.getPath())) {
             System.out.println("No reason to remove the file.");
             return;
         }
-        Blob blob = readObject(file, Blob.class);
-        if (!commit.getMap().containsKey(blob.getFullFilePath().getPath())) {
-            System.out.println("No reason to remove the file.");
-            return;
+        if (commit.containFile(fileInCwd.getPath())) {
+            File file = join(BLOBS, commit.getSHA1(fileInCwd.getPath()));
+            Blob blob = readObject(file, Blob.class);
+            writeObject(join(REMOVE_AREA, fileName), blob);
         }
-
-        file.delete();
-        if (join(CWD, fileName).exists()) {
-            join(CWD, fileName).delete();
-        }
-        writeObject(join(REMOVE_AREA, fileName), blob);
+        fileInAddArea.delete();
+        fileInCwd.delete();
     }
 
     public static void log() {
@@ -215,7 +214,11 @@ public class Repository {
         System.out.println();
     }
 
-    public static void checkoutFile(String fileName) {
+    public static void checkout(String str, String fileName) {
+        if (!str.equals("--")) {
+            System.out.println("Incorrect operands.");
+            return;
+        }
         File head = readObject(HEAD, File.class);
         Commit commit = readObject(head, Commit.class);
         if (!commit.containFile(join(CWD, fileName).getPath())) {
@@ -227,7 +230,11 @@ public class Repository {
         blob.writeBlob();
     }
 
-    public static void checkoutFile(String sha1Commit, String fileName) {
+    public static void checkout(String sha1Commit, String str, String fileName) {
+        if (!str.equals("--")) {
+            System.out.println("Incorrect operands.");
+            return;
+        }
         if (!join(SHA1COMMITS, sha1Commit).exists()) {
             System.out.println("No commit with that id exists.");
             return;
@@ -257,7 +264,8 @@ public class Repository {
         Commit commit = readObject(branch, Commit.class);
         for (File file : Objects.requireNonNull(CWD.listFiles())) {
             if (!headCommit.containFile(file.getPath())) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
                 return;
             }
         }
@@ -267,6 +275,7 @@ public class Repository {
             Blob blob = readObject(temp, Blob.class);
             blob.writeBlob();
         }
+        writeObject(HEAD, branch);
         cleanStagingArea();
 
     }
@@ -308,12 +317,119 @@ public class Repository {
     }
 
     public static void merge(String branchName) {
+
         File head = readObject(HEAD, File.class);
         File branch = readObject(join(BRANCHES, branchName), File.class);
+
+        if (ADD_AREA.listFiles() != null || REMOVE_AREA.listFiles() != null) {
+            System.out.println("You have uncommitted changes.");
+            return;
+        }
+
+        if (!branch.exists()) {
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+
         if (head.equals(branch)) {
+            System.out.println("Cannot merge a branch with itself.");
+            return;
+        }
+
+        Commit headCommit = readObject(head, Commit.class);
+        for (File file : Objects.requireNonNull(CWD.listFiles())) {
+            if (!headCommit.containFile(file.getPath())) {
+                System.out.println("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
+                return;
+            }
+        }
+
+        Commit branchCommit = readObject(branch, Commit.class);
+        String sha1Ancestor = findSplitPoint(branchCommit, headCommit);
+        if (sha1Ancestor.equals(headCommit.generateSHA1())) {
             checkout(branchName);
             System.out.println("Current branch fast-forwarded.");
             return;
+        }
+
+        if (sha1Ancestor.equals(branchCommit.generateSHA1())) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return;
+        }
+        Commit ancestorCommit = readObject(join(SHA1COMMITS, sha1Ancestor), Commit.class);
+
+        Set<String> branchFiles = branchCommit.getFiles();
+        Set<String> ancestorFiles = ancestorCommit.getFiles();
+        String sha1Branch = branchCommit.generateSHA1();
+        boolean conflicted = false;
+
+        // Case 1、2、3、6、7、8: modified cases
+        for (String s : ancestorFiles) {
+            String sha1AncestorFile = ancestorCommit.getSHA1(s);
+            String sha1HeadFile = headCommit.getSHA1(s);
+            String sha1BranchFile = branchCommit.getSHA1(s);
+
+            // Case 3
+            if (sha1HeadFile == null && sha1BranchFile == null) {
+                continue;
+            }
+            // Case 6
+            if (sha1AncestorFile.equals(sha1HeadFile) && sha1BranchFile == null) {
+                File file = new File(s);
+                headCommit.removeFile(file);
+                file.delete();
+                continue;
+            }
+            // Case 7
+            if (sha1AncestorFile.equals(sha1BranchFile) && sha1HeadFile == null) {
+                continue;
+            }
+            // Case 1
+            if (!sha1AncestorFile.equals(sha1BranchFile) && sha1AncestorFile.equals(sha1HeadFile)) {
+                String fileName = new File(s).getName();
+                checkout(sha1Branch, "--", fileName);
+                add(fileName);
+                continue;
+            }
+            // Case 2
+            if (sha1AncestorFile.equals(sha1BranchFile) && !sha1AncestorFile.equals(sha1HeadFile)) {
+                continue;
+            }
+
+            // Case 8
+            String temp1 = sha1HeadFile;
+            String temp2 = sha1BranchFile;
+            if (sha1HeadFile == null) {
+                temp1 = sha1BranchFile;
+                temp2 = null;
+            }
+            if (!temp1.equals(temp2)) {
+                String conflict = "<<<<<<< HEAD\n"
+                        + "contents of file in current branch\n"
+                        + "=======\n"
+                        + "contents of file in given branch\n"
+                        + ">>>>>>>";
+                String fileName = new File(s).getName();
+                writeObject(join(CWD, fileName), conflict);
+                add(fileName);
+                conflicted = true;
+            }
+
+        }
+
+        // Case 5
+        for (String s : branchFiles) {
+            if (!headCommit.containFile(s) && !ancestorCommit.containFile(s)) {
+                String fileName = new File(s).getName();
+                checkout(sha1Branch, "--", fileName);
+                add(fileName);
+            }
+        }
+
+        commit("Merged " + head.getName() + " into " + branchName);
+        if (conflicted) {
+            System.out.println("Encountered a merge conflict.");
         }
 
     }
@@ -325,6 +441,40 @@ public class Repository {
         for (File file : Objects.requireNonNull(REMOVE_AREA.listFiles())) {
             file.delete();
         }
+    }
+
+    private static String findSplitPoint(Commit branch1, Commit branch2) {
+        int depth1 = 0, depth2 = 0;
+        Commit temp = branch1;
+        while (temp.getFirstParent() != null) {
+            temp = readObject(join(SHA1COMMITS, temp.getFirstParent()), Commit.class);
+            depth1 += 1;
+        }
+        temp = branch2;
+        while (temp.getFirstParent() != null) {
+            temp = readObject(join(SHA1COMMITS, temp.getFirstParent()), Commit.class);
+            depth1 += 1;
+        }
+        if (depth1 > depth2) {
+            temp = branch1;
+            branch1 = branch2;
+            branch2 = temp;
+            int tempDepth = depth1;
+            depth1 = depth2;
+            depth2 = tempDepth;
+        }
+        while (depth1 < depth2) {
+            branch2 = readObject(join(SHA1COMMITS, branch2.getFirstParent()), Commit.class);
+            depth2 -= 1;
+        }
+        if (branch1.generateSHA1().equals(branch2.generateSHA1())) {
+            return branch1.generateSHA1();
+        }
+        while (!branch1.getFirstParent().equals(branch2.getFirstParent())) {
+            branch1 = readObject(join(SHA1COMMITS, branch1.getFirstParent()), Commit.class);
+            branch2 = readObject(join(SHA1COMMITS, branch2.getFirstParent()), Commit.class);
+        }
+        return branch1.getFirstParent();
     }
 
 }

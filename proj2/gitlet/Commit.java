@@ -33,7 +33,7 @@ public class Commit implements Serializable {
 
     private Map<String, String> map;
 
-    /** parents of this Commit. */
+    /** parents' sha1ID of this Commit. */
     private String firstParent;
     private String secondParent;
 
@@ -72,7 +72,8 @@ public class Commit implements Serializable {
 
     public String generateSHA1() {
         if (this.secondParent != null && this.firstParent != null) {
-            return sha1(this.timestamp, this.message, this.map.toString(), this.firstParent, this.secondParent);
+            return sha1(this.timestamp, this.message,
+                    this.map.toString(), this.firstParent, this.secondParent);
         } else if (this.firstParent != null) {
             return sha1(this.timestamp, this.message, this.map.toString(), this.firstParent);
         }
