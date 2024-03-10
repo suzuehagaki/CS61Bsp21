@@ -2,7 +2,6 @@ package gitlet;
 
 // TODO: any imports you need here
 
-import java.io.File;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -26,15 +25,15 @@ public class Commit implements Serializable {
      */
 
     /** timestamp of this Commit. */
-    private String timestamp;
+    private final String timestamp;
 
     /** The message of this Commit. */
-    private String message;
+    private final String message;
 
-    private Map<String, String> map;
+    private final Map<String, String> map;
 
     /** parents' sha1ID of this Commit. */
-    private String firstParent;
+    private final String firstParent;
     private String secondParent;
 
 
@@ -46,28 +45,27 @@ public class Commit implements Serializable {
         this.map = new TreeMap<>();
     }
 
-    public Commit(Commit parent, String message) {
+    public Commit(Commit firstParent, String message) {
         this.timestamp = dateToTimeStamp(new Date());
         this.message = message;
-        this.firstParent = parent.generateSHA1();
-        this.map = parent.getMap();
+        this.firstParent = firstParent.generateSHA1();
+        this.map = firstParent.getMap();
     }
 
-    public void addFile(File file, Blob blob) {
-        this.map.put(file.getPath(), blob.getSHA1());
+    public Commit(Commit firstParent, String secondParentID, String message) {
+        this.timestamp = dateToTimeStamp(new Date());
+        this.message = message;
+        this.firstParent = firstParent.generateSHA1();
+        this.map = firstParent.getMap();
+        this.secondParent = secondParentID;
     }
 
-    public void removeFile(File file) {
-        this.map.remove(file.getPath());
+    public void addFile(String fileName, String sha1) {
+        this.map.put(fileName, sha1);
     }
 
-    public void clearFiles() {
-        for (String s : this.map.keySet()) {
-            File file = new File(s);
-            if (file.exists()) {
-                file.delete();
-            }
-        }
+    public void removeFile(String fileName) {
+        this.map.remove(fileName);
     }
 
     public String generateSHA1() {
@@ -115,9 +113,14 @@ public class Commit implements Serializable {
     public void dumpCommit() {
         System.out.println("===");
         System.out.println("commit " + this.generateSHA1());
+        if (this.secondParent != null) {
+            System.out.println("Merge: " + firstParent.substring(0, 7) + " "
+                    + secondParent.substring(0, 7));
+        }
         System.out.println("Date: " + this.getTimestamp());
-        System.out.println(this.getMessage());
-        if (this.getSecondParent() != null) {
+        if (this.secondParent == null) {
+            System.out.println(this.getMessage());
+        } else {
             System.out.println("Merged development into master.");
         }
         System.out.println();

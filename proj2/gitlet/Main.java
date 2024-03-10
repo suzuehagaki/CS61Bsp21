@@ -1,8 +1,5 @@
 package gitlet;
 
-import java.util.Map;
-import java.util.TreeMap;
-
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author suzue
  */
