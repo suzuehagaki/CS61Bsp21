@@ -267,6 +267,7 @@ public class Repository {
         File file = join(COMMITS_CONTENTS, sha1);
         if (!file.exists()) {
             System.out.println("No commit with that id exists.");
+            return;
         }
         File head = readObject(HEAD, File.class);
         if (checkoutHelper(head, file)) {
@@ -275,6 +276,7 @@ public class Repository {
         Commit commit = readObject(file, Commit.class);
         writeObject(head, commit);
         writeObject(HEAD, head);
+        cleanStagingArea();
     }
 
     public static void merge(String branchName) {
@@ -298,15 +300,15 @@ public class Repository {
             return;
         }
 
-        if (hasUntracked(branch)) {
+        Commit headCommit = readObject(head, Commit.class);
+        Commit branchCommit = readObject(branch, Commit.class);
+        String sha1Ancestor = findSplitPoint(branchCommit, headCommit);
+        File ancestor = join(COMMITS_CONTENTS, sha1Ancestor);
+        if (hasUntracked(ancestor, branch)) {
             System.out.println("There is an untracked file in the way; "
                     + "delete it, or add and commit it first.");
             return;
         }
-        Commit headCommit = readObject(head, Commit.class);
-
-        Commit branchCommit = readObject(branch, Commit.class);
-        String sha1Ancestor = findSplitPoint(branchCommit, headCommit);
         if (sha1Ancestor.equals(branchCommit.generateSHA1())) {
             System.out.println("Given branch is an ancestor of the current branch.");
             return;
@@ -368,7 +370,7 @@ public class Repository {
                         + "=======\n"
                         + "contents of file in given branch\n"
                         + ">>>>>>>\n";
-                writeObject(join(CWD, fileName), conflict);
+                writeContents(join(CWD, fileName), conflict);
                 add(fileName);
                 conflicted = true;
             }
@@ -386,7 +388,7 @@ public class Repository {
                         + "=======\n"
                         + "contents of file in given branch\n"
                         + ">>>>>>>\n";
-                writeObject(join(CWD, fileName), conflict);
+                writeContents(join(CWD, fileName), conflict);
                 add(fileName);
                 conflicted = true;
             }
@@ -408,38 +410,83 @@ public class Repository {
         }
     }
 
+    /** Get the largest precursor of both branch1 and branch2 in a hasse diagram.
+      * Is it a hasse diagram? */
     private static String findSplitPoint(Commit branch1, Commit branch2) {
-        int depth1 = 0, depth2 = 0;
-        Commit temp = branch1;
-        while (temp.getFirstParent() != null) {
-            temp = readObject(join(COMMITS_CONTENTS, temp.getFirstParent()), Commit.class);
-            depth1 += 1;
+
+        Set<String> precursorsOfBranch1 = findPrecursors(branch1);
+        Set<String> commonPrecursors = new TreeSet<>();
+        List<Commit> commits = new LinkedList<>();
+        commits.add(branch2);
+
+        while (!commits.isEmpty()) {
+            List<Commit> temp = new LinkedList<>();
+            for (Commit commit : commits) {
+                String firstParent = commit.getFirstParent();
+                String secondParent = commit.getSecondParent();
+                if (firstParent != null) {
+                    temp.add(readObject(join(COMMITS_CONTENTS, firstParent), Commit.class));
+                    if (precursorsOfBranch1.contains(firstParent)) {
+                        commonPrecursors.add(firstParent);
+                    }
+                }
+                if (secondParent != null) {
+                    temp.add(readObject(join(COMMITS_CONTENTS, secondParent), Commit.class));
+                    if (precursorsOfBranch1.contains(secondParent)) {
+                        commonPrecursors.add(secondParent);
+                    }
+                }
+            }
+            commits = temp;
         }
-        temp = branch2;
-        while (temp.getFirstParent() != null) {
-            temp = readObject(join(COMMITS_CONTENTS, temp.getFirstParent()), Commit.class);
-            depth2 += 1;
+
+        String splitPoint = "";
+        int depth = -1;
+        for (String commonPrecursor : commonPrecursors) {
+            Commit commit = readObject(join(COMMITS_CONTENTS, commonPrecursor), Commit.class);
+            int tempDepth = getDepth(commit);
+            if (depth < tempDepth) {
+                splitPoint = commonPrecursor;
+                depth = tempDepth;
+            }
+        }
+        return splitPoint;
+    }
+
+    private static Set<String> findPrecursors(Commit commit) {
+        Set<String> precursors = new TreeSet<>();
+        List<Commit> commits = new LinkedList<>();
+        commits.add(commit);
+        while (!commits.isEmpty()) {
+            List<Commit> temp = new LinkedList<>();
+            for (Commit com : commits) {
+                if (com.getFirstParent() != null) {
+                    temp.add(readObject(join(COMMITS_CONTENTS, com.getFirstParent()), Commit.class));
+                    precursors.add(com.getFirstParent());
+                }
+                if (com.getSecondParent() != null) {
+                    temp.add(readObject(join(COMMITS_CONTENTS, com.getSecondParent()), Commit.class));
+                    precursors.add(com.getSecondParent());
+                }
+            }
+            commits = temp;
+        }
+        return precursors;
+    }
+
+    private static int getDepth(Commit commit) {
+        if (commit.getFirstParent() == null) {
+            return 0;
+        }
+        int depth1 = getDepth(readObject(join(COMMITS_CONTENTS, commit.getFirstParent()), Commit.class));
+        int depth2 = 0;
+        if (commit.getSecondParent() != null) {
+            depth2 = getDepth(readObject(join(COMMITS_CONTENTS, commit.getSecondParent()), Commit.class));
         }
         if (depth1 > depth2) {
-            temp = branch1;
-            branch1 = branch2;
-            branch2 = temp;
-            int tempDepth = depth1;
-            depth1 = depth2;
-            depth2 = tempDepth;
+            return 1 + depth1;
         }
-        while (depth1 < depth2) {
-            branch2 = readObject(join(COMMITS_CONTENTS, branch2.getFirstParent()), Commit.class);
-            depth2 -= 1;
-        }
-        if (branch1.generateSHA1().equals(branch2.generateSHA1())) {
-            return branch1.generateSHA1();
-        }
-        while (!branch1.getFirstParent().equals(branch2.getFirstParent())) {
-            branch1 = readObject(join(COMMITS_CONTENTS, branch1.getFirstParent()), Commit.class);
-            branch2 = readObject(join(COMMITS_CONTENTS, branch2.getFirstParent()), Commit.class);
-        }
-        return branch1.getFirstParent();
+        return 1 + depth2;
     }
 
     private static boolean hasUntracked(File branch) {
@@ -451,6 +498,25 @@ public class Repository {
                 continue;
             }
             if (!commit.containFile(file.getName()) && branchCommit.containFile(file.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasUntracked(File splitPoint, File branch) {
+        File head = readObject(HEAD, File.class);
+        Commit commit = readObject(head, Commit.class);
+        Commit branchCommit = readObject(branch, Commit.class);
+        Commit splitCommit = readObject(splitPoint, Commit.class);
+        for (File file : Objects.requireNonNull(CWD.listFiles())) {
+            if (file.isDirectory()) {
+                continue;
+            }
+            if (!commit.containFile(file.getName()) && branchCommit.containFile(file.getName())) {
+                return true;
+            }
+            if (!commit.containFile(file.getName()) && splitCommit.containFile(file.getName())) {
                 return true;
             }
         }

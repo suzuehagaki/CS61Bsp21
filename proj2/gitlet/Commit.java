@@ -118,11 +118,7 @@ public class Commit implements Serializable {
                     + secondParent.substring(0, 7));
         }
         System.out.println("Date: " + this.getTimestamp());
-        if (this.secondParent == null) {
-            System.out.println(this.getMessage());
-        } else {
-            System.out.println("Merged development into master.");
-        }
+        System.out.println(this.message);
         System.out.println();
     }
 
