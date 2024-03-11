@@ -14,10 +14,12 @@ import static gitlet.Utils.*;
  *  @author suzue
  */
 public class Repository {
-    /*
-      List all instance variables of the Repository class here with a useful
-      comment above them describing what that variable represents and how that
-      variable is used. We've provided two examples for you.
+    /**
+     * TODO: add instance variables here.
+     *
+     * List all instance variables of the Repository class here with a useful
+     * comment above them describing what that variable represents and how that
+     * variable is used. We've provided two examples for you.
      */
 
     /** The current working directory. */
@@ -37,6 +39,8 @@ public class Repository {
     public static final File BRANCHES = join(COMMITS, "branches");
     public static final File HEAD = join(COMMITS, "head");
     public static final File MASTER = join(BRANCHES, "master");
+
+    /* TODO: fill in the rest of this class. */
 
     /** init .gitlet directory if it does not exist. */
     public static void init() {
@@ -168,12 +172,12 @@ public class Repository {
         }
         System.out.println();
 
-
+        // TODO:
         System.out.println("=== Modifications Not Staged For Commit ===");
 
         System.out.println();
 
-
+        // TODO:
         System.out.println("=== Untracked Files ===");
 
         System.out.println();
@@ -371,7 +375,7 @@ public class Repository {
                 if (sha1HeadFile != null) {
                     temp1 = new String(readContents(join(FILES_CONTENTS, sha1HeadFile)));
                 }
-                if (sha1Branch != null) {
+                if (sha1BranchFile != null) {
                     temp2 = new String(readContents(join(FILES_CONTENTS, sha1BranchFile)));
                 }
                 String conflict = "<<<<<<< HEAD\n"
