@@ -205,11 +205,17 @@ public class Repository {
             System.out.println("Incorrect operands.");
             return;
         }
-        if (!join(COMMITS_CONTENTS, sha1).exists()) {
+        String fullSha1 = "";
+        for (File file : Objects.requireNonNull(COMMITS_CONTENTS.listFiles())) {
+            if (file.getName().startsWith(sha1)) {
+                fullSha1 = file.getName();
+            }
+        }
+        if (fullSha1.isEmpty()) {
             System.out.println("No commit with that id exists.");
             return;
         }
-        Commit commit = readObject(join(COMMITS_CONTENTS, sha1), Commit.class);
+        Commit commit = readObject(join(COMMITS_CONTENTS, fullSha1), Commit.class);
         if (!commit.containFile(fileName)) {
             System.out.println("File does not exist in that commit.");
             return;
@@ -384,17 +390,17 @@ public class Repository {
             } else if (!ancestorCommit.containFile(fileName)
                     && !branchCommit.getSHA1(fileName).equals(headCommit.getSHA1(fileName))) {
                 String conflict = "<<<<<<< HEAD\n"
-                        + "contents of file in current branch\n"
-                        + "=======\n"
-                        + "contents of file in given branch\n"
-                        + ">>>>>>>\n";
+                        + Arrays.toString(readContents(join(FILES_CONTENTS, headCommit.getSHA1(fileName))))
+                        + "\n=======\n"
+                        + Arrays.toString(readContents(join(FILES_CONTENTS, branchCommit.getSHA1(fileName))))
+                        + "\n>>>>>>>\n";
                 writeContents(join(CWD, fileName), conflict);
                 add(fileName);
                 conflicted = true;
             }
         }
 
-        commitHelper("Merged " + head.getName() + " into " + branchName, sha1Branch);
+        commitHelper("Merged " + branchName + " into " + head.getName(), sha1Branch);
         if (conflicted) {
             System.out.println("Encountered a merge conflict.");
         }
@@ -418,7 +424,9 @@ public class Repository {
         Set<String> commonPrecursors = new TreeSet<>();
         List<Commit> commits = new LinkedList<>();
         commits.add(branch2);
-
+        if (precursorsOfBranch1.contains(branch2.generateSHA1())) {
+            return branch2.generateSHA1();
+        }
         while (!commits.isEmpty()) {
             List<Commit> temp = new LinkedList<>();
             for (Commit commit : commits) {
@@ -457,6 +465,7 @@ public class Repository {
         Set<String> precursors = new TreeSet<>();
         List<Commit> commits = new LinkedList<>();
         commits.add(commit);
+        precursors.add(commit.generateSHA1());
         while (!commits.isEmpty()) {
             List<Commit> temp = new LinkedList<>();
             for (Commit com : commits) {

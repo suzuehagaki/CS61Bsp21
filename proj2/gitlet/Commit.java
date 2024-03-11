@@ -98,12 +98,12 @@ public class Commit implements Serializable {
         return this.message;
     }
 
-    public boolean containFile(String filePath) {
-        return this.map.containsKey(filePath);
+    public boolean containFile(String fileName) {
+        return this.map.containsKey(fileName);
     }
 
-    public String getSHA1(String filePath) {
-        return this.map.get(filePath);
+    public String getSHA1(String fileName) {
+        return this.map.get(fileName);
     }
 
     public Set<String> getFiles() {
