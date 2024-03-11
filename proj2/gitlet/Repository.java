@@ -390,9 +390,9 @@ public class Repository {
             } else if (!ancestorCommit.containFile(fileName)
                     && !branchCommit.getSHA1(fileName).equals(headCommit.getSHA1(fileName))) {
                 String conflict = "<<<<<<< HEAD\n"
-                        + Arrays.toString(readContents(join(FILES_CONTENTS, headCommit.getSHA1(fileName))))
+                        + new String(readContents(join(FILES_CONTENTS, headCommit.getSHA1(fileName))))
                         + "\n=======\n"
-                        + Arrays.toString(readContents(join(FILES_CONTENTS, branchCommit.getSHA1(fileName))))
+                        + new String(readContents(join(FILES_CONTENTS, branchCommit.getSHA1(fileName))))
                         + "\n>>>>>>>\n";
                 writeContents(join(CWD, fileName), conflict);
                 add(fileName);
@@ -400,7 +400,7 @@ public class Repository {
             }
         }
 
-        commitHelper("Merged " + branchName + " into " + head.getName(), sha1Branch);
+        commitHelper("Merged " + branchName + " into " + head.getName()  + ".", sha1Branch);
         if (conflicted) {
             System.out.println("Encountered a merge conflict.");
         }
