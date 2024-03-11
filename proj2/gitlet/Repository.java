@@ -6,21 +6,18 @@ import java.util.*;
 
 import static gitlet.Utils.*;
 
-// TODO: any imports you need here
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
+ *  It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
+ *  @author suzue
  */
 public class Repository {
-    /**
-     * TODO: add instance variables here.
-     *
-     * List all instance variables of the Repository class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided two examples for you.
+    /*
+      List all instance variables of the Repository class here with a useful
+      comment above them describing what that variable represents and how that
+      variable is used. We've provided two examples for you.
      */
 
     /** The current working directory. */
@@ -40,8 +37,6 @@ public class Repository {
     public static final File BRANCHES = join(COMMITS, "branches");
     public static final File HEAD = join(COMMITS, "head");
     public static final File MASTER = join(BRANCHES, "master");
-
-    /* TODO: fill in the rest of this class. */
 
     /** init .gitlet directory if it does not exist. */
     public static void init() {
@@ -173,12 +168,12 @@ public class Repository {
         }
         System.out.println();
 
-        // TODO:
+
         System.out.println("=== Modifications Not Staged For Commit ===");
 
         System.out.println();
 
-        // TODO:
+
         System.out.println("=== Untracked Files ===");
 
         System.out.println();
@@ -371,10 +366,18 @@ public class Repository {
                 temp2 = null;
             }
             if (!temp1.equals(temp2)) {
+                temp1 = "";
+                temp2 = "";
+                if (sha1HeadFile != null) {
+                    temp1 = new String(readContents(join(FILES_CONTENTS, sha1HeadFile)));
+                }
+                if (sha1Branch != null) {
+                    temp2 = new String(readContents(join(FILES_CONTENTS, sha1BranchFile)));
+                }
                 String conflict = "<<<<<<< HEAD\n"
-                        + "contents of file in current branch\n"
+                        + temp1
                         + "=======\n"
-                        + "contents of file in given branch\n"
+                        + temp2
                         + ">>>>>>>\n";
                 writeContents(join(CWD, fileName), conflict);
                 add(fileName);
@@ -389,11 +392,15 @@ public class Repository {
                 add(fileName);
             } else if (!ancestorCommit.containFile(fileName)
                     && !branchCommit.getSHA1(fileName).equals(headCommit.getSHA1(fileName))) {
+                String temp = "";
+                if (headCommit.getSHA1(fileName) != null) {
+                    temp = new String(readContents(join(FILES_CONTENTS, branchCommit.getSHA1(fileName))));
+                }
                 String conflict = "<<<<<<< HEAD\n"
                         + new String(readContents(join(FILES_CONTENTS, headCommit.getSHA1(fileName))))
-                        + "\n=======\n"
-                        + new String(readContents(join(FILES_CONTENTS, branchCommit.getSHA1(fileName))))
-                        + "\n>>>>>>>\n";
+                        + "=======\n"
+                        + temp
+                        + ">>>>>>>\n";
                 writeContents(join(CWD, fileName), conflict);
                 add(fileName);
                 conflicted = true;

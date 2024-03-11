@@ -11,8 +11,6 @@ public class Main {
     public static void main(String[] args) {
 
 
-
-        // TODO: what if args is empty?
         if (args.length == 0) {
             System.out.println("Please enter a command.");
             System.exit(0);
@@ -30,7 +28,6 @@ public class Main {
                 Repository.init();
                 break;
             case "add":
-                // TODO: handle the `add [filename]` command
                 Repository.add(args[1]);
                 break;
             case "commit":
@@ -43,7 +40,6 @@ public class Main {
             case "rm":
                 Repository.remove(args[1]);
                 break;
-            // TODO: FILL THE REST IN
             case "log":
                 Repository.log();
                 break;
