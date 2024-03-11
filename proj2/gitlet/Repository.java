@@ -298,7 +298,7 @@ public class Repository {
             return;
         }
 
-        if (hasUntracked()) {
+        if (hasUntracked(branch)) {
             System.out.println("There is an untracked file in the way; "
                     + "delete it, or add and commit it first.");
             return;
@@ -379,10 +379,8 @@ public class Repository {
             if (!headCommit.containFile(fileName) && !ancestorCommit.containFile(fileName)) {
                 checkout(sha1Branch, "--", fileName);
                 add(fileName);
-            }
-            // Case 8
-            if (!ancestorCommit.containFile(fileName)
-                    && !branchCommit.getSHA1(fileName).equals(headCommit.generateSHA1())) {
+            } else if (!ancestorCommit.containFile(fileName)
+                    && !branchCommit.getSHA1(fileName).equals(headCommit.getSHA1(fileName))) {
                 String conflict = "<<<<<<< HEAD\n"
                         + "contents of file in current branch\n"
                         + "=======\n"
@@ -444,14 +442,15 @@ public class Repository {
         return branch1.getFirstParent();
     }
 
-    private static boolean hasUntracked() {
+    private static boolean hasUntracked(File branch) {
         File head = readObject(HEAD, File.class);
         Commit commit = readObject(head, Commit.class);
+        Commit branchCommit = readObject(branch, Commit.class);
         for (File file : Objects.requireNonNull(CWD.listFiles())) {
             if (file.isDirectory()) {
                 continue;
             }
-            if (!commit.containFile(file.getName())) {
+            if (!commit.containFile(file.getName()) && branchCommit.containFile(file.getName())) {
                 return true;
             }
         }
@@ -461,7 +460,7 @@ public class Repository {
     private static boolean checkoutHelper(File head, File branch) {
         Commit headCommit = readObject(head, Commit.class);
         Commit commit = readObject(branch, Commit.class);
-        if (hasUntracked()) {
+        if (hasUntracked(branch)) {
             System.out.println("There is an untracked file in the way; "
                     + "delete it, or add and commit it first.");
             return true;
